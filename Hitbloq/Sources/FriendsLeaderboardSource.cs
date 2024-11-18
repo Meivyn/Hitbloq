@@ -26,17 +26,17 @@ namespace Hitbloq.Sources
 		}
 
 		public string HoverHint => "Friends";
-		
+
 		public Task<Sprite> Icon { get; } =
 			BeatSaberMarkupLanguage.Utilities.LoadSpriteFromAssemblyAsync("Hitbloq.Images.FriendsIcon.png");
 
 		public bool Scrollable => true;
 
-		public async Task<List<HitbloqMapLeaderboardEntry>?> GetScoresAsync(IDifficultyBeatmap difficultyBeatmap, CancellationToken cancellationToken = default, int page = 0)
+		public async Task<List<HitbloqMapLeaderboardEntry>?> GetScoresAsync(BeatmapKey beatmapKey, CancellationToken cancellationToken = default, int page = 0)
 		{
 			if (_cachedEntries == null)
 			{
-				var beatmapString = Utils.DifficultyBeatmapToString(difficultyBeatmap);
+				var beatmapString = Utils.DifficultyBeatmapToString(beatmapKey);
 				if (beatmapString == null)
 				{
 					return null;

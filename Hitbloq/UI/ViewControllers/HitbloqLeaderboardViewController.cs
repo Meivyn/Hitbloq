@@ -22,7 +22,7 @@ namespace Hitbloq.UI.ViewControllers
 	{
 		[UIComponent("vertical-icon-segments")]
 		private readonly IconSegmentedControl? _iconSegmentedControl = null!;
-		
+
 		[UIComponent("leaderboard")]
 		private readonly LeaderboardTableView? _leaderboard = null!;
 
@@ -38,7 +38,7 @@ namespace Hitbloq.UI.ViewControllers
 		[Inject]
 		private readonly UserIDSource _userIDSource = null!;
 
-		private IDifficultyBeatmap? _difficultyBeatmap;
+		private BeatmapKey _beatmapKey;
 
 		private List<Button>? _infoButtons;
 		private List<HitbloqMapLeaderboardEntry>? _leaderboardEntries;
@@ -55,11 +55,11 @@ namespace Hitbloq.UI.ViewControllers
 			{
 				_pageNumber = value;
 				NotifyPropertyChanged(nameof(UpEnabled));
-				if (_leaderboard != null && _loadingControl != null && _difficultyBeatmap != null && Utils.IsDependencyLeaderboardInstalled)
+				if (_leaderboard != null && _loadingControl != null && _beatmapKey.IsValid() && Utils.IsDependencyLeaderboardInstalled)
 				{
 					_leaderboard.SetScores(new List<LeaderboardTableView.ScoreData>(), 0);
 					_loadingControl.ShowLoading();
-					PageRequested?.Invoke(_difficultyBeatmap, _leaderboardSources[SelectedCellIndex], value);
+					PageRequested?.Invoke(_beatmapKey, _leaderboardSources[SelectedCellIndex], value);
 				}
 			}
 		}
@@ -70,11 +70,11 @@ namespace Hitbloq.UI.ViewControllers
 		[UIValue("down-enabled")]
 		private bool DownEnabled => _leaderboardEntries is {Count: 10} && _leaderboardSources[SelectedCellIndex].Scrollable;
 
-		public void DifficultyBeatmapUpdated(IDifficultyBeatmap difficultyBeatmap, HitbloqLevelInfo? levelInfoEntry)
+		public void DifficultyBeatmapUpdated(BeatmapKey beatmapKey, HitbloqLevelInfo? levelInfoEntry)
 		{
 			if (levelInfoEntry != null)
 			{
-				_difficultyBeatmap = difficultyBeatmap;
+				_beatmapKey = beatmapKey;
 				if (isActiveAndEnabled)
 				{
 					foreach (var leaderboardSource in _leaderboardSources)
@@ -103,7 +103,7 @@ namespace Hitbloq.UI.ViewControllers
 			}
 		}
 
-		public event Action<IDifficultyBeatmap, IMapLeaderboardSource, int>? PageRequested;
+		public event Action<BeatmapKey, IMapLeaderboardSource, int>? PageRequested;
 
 		protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
 		{
@@ -217,9 +217,9 @@ namespace Hitbloq.UI.ViewControllers
 			{
 				list.Add(new IconSegmentedControl.DataItem(await leaderboardSource.Icon, leaderboardSource.HoverHint));
 			}
-			
+
 			_iconSegmentedControl!.SetData(list.ToArray());
-			
+
 			// To set rich text, I have to iterate through all cells, set each cell to allow rich text and next time they will have it
 			var leaderboardTableCells = _leaderboardTransform!.GetComponentsInChildren<LeaderboardTableCell>(true);
 
@@ -247,11 +247,11 @@ namespace Hitbloq.UI.ViewControllers
 			ChangeButtonScale(_button8!, 0.425f);
 			ChangeButtonScale(_button9!, 0.425f);
 			ChangeButtonScale(_button10!, 0.425f);
-			
+
 			if (Utils.IsDependencyLeaderboardInstalled is false)
 			{
 				SetNoDependenciesInstalledText();
-				
+
 				foreach (var button in _infoButtons)
 				{
 					button.gameObject.SetActive(false);

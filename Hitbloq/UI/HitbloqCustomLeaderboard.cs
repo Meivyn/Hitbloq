@@ -24,7 +24,9 @@ namespace Hitbloq.UI
 		protected override ViewController panelViewController { get; }
 		protected override ViewController leaderboardViewController => _hitbloqLeaderboardViewController;
 
-		public void DifficultyBeatmapUpdated(IDifficultyBeatmap difficultyBeatmap, HitbloqLevelInfo? levelInfoEntry)
+		// protected override string leaderboardId => "Hitbloq";
+
+		public void DifficultyBeatmapUpdated(BeatmapKey beatmapKey, HitbloqLevelInfo? levelInfoEntry)
 		{
 			if (levelInfoEntry != null)
 			{

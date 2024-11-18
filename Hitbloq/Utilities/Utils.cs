@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using IPA.Loader;
 using Newtonsoft.Json;
 using SiraUtil.Web;
-using SongCore.Utilities;
+using SongCore;
 using Version = Hive.Versioning.Version;
 
 namespace Hitbloq.Utilities
@@ -33,20 +33,21 @@ namespace Hitbloq.Utilities
 					var plugin = PluginManager.GetPluginFromId("BeatLeader");
 					_isBeatLeaderInstalled = plugin is not null && plugin.HVersion >= new Version(0, 6, 1);
 				}
-				
+
 				return (bool) _isBeatLeaderInstalled;
 			}
 		}
 
 		public static bool IsDependencyLeaderboardInstalled => IsScoreSaberInstalled || IsBeatLeaderInstalled;
 
-		public static string? DifficultyBeatmapToString(IDifficultyBeatmap difficultyBeatmap)
+		public static string? DifficultyBeatmapToString(BeatmapKey beatmapKey)
 		{
-			if (difficultyBeatmap.level is CustomPreviewBeatmapLevel customLevel)
+			if (beatmapKey.levelId.StartsWith(CustomLevelLoader.kCustomLevelPrefixId, StringComparison.Ordinal))
 			{
-				var hash = Hashing.GetCustomLevelHash(customLevel);
-				var difficulty = difficultyBeatmap.difficulty.ToString();
-				var characteristic = difficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+				// var hash = Hashing.GetCustomLevelHash(beatmapKey.levelId);
+				var hash = Collections.hashForLevelID(beatmapKey.levelId);
+				var difficulty = beatmapKey.difficulty.SerializedName();
+				var characteristic = beatmapKey.beatmapCharacteristic.serializedName;
 				return $"{hash}%7C_{difficulty}_Solo{characteristic}";
 			}
 
@@ -67,7 +68,7 @@ namespace Hitbloq.Utilities
 			{
 				// Plugin.Log.Error($"Unsuccessful web response for parsing {typeof(T)}. Status code: {webResponse.Code}");
 			}
-			
+
 			return default;
 		}
 
@@ -99,7 +100,7 @@ namespace Hitbloq.Utilities
 			return sb.ToString();
 		}
 
-		public static LevelSelectionFlowCoordinator.State GetStateForPlaylist(IBeatmapLevelPack beatmapLevelPack)
+		public static LevelSelectionFlowCoordinator.State GetStateForPlaylist(BeatmapLevelPack beatmapLevelPack)
 		{
 			var state = new LevelSelectionFlowCoordinator.State(beatmapLevelPack);
 			Accessors.LevelCategoryAccessor(ref state) = SelectLevelCategoryViewController.LevelCategory.CustomSongs;

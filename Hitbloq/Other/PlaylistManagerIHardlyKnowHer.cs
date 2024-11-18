@@ -99,7 +99,7 @@ namespace Hitbloq.Other
 			_tokenSource?.Cancel();
 		}
 
-		private async Task<IBeatmapLevelPack?> GetPlaylist(string poolID, CancellationToken token = default)
+		private async Task<BeatmapLevelPack?> GetPlaylist(string poolID, CancellationToken token = default)
 		{
 			var localPlaylist = await FindLocalPlaylistFromPoolID(poolID, token);
 			if (localPlaylist != null)
@@ -110,15 +110,15 @@ namespace Hitbloq.Other
 			return await DownloadPlaylistFromPoolID(poolID, token).ConfigureAwait(false);
 		}
 
-		public async Task<IBeatmapLevelPack?> FindLocalPlaylistFromPoolID(string poolID, CancellationToken token = default)
+		public async Task<BeatmapLevelPack?> FindLocalPlaylistFromPoolID(string poolID, CancellationToken token = default)
 		{
 			try
 			{
-				return await Task.Run(() =>
+				return (await Task.Run(() =>
 				{
 					var syncURL = $"https://hitbloq.com/static/hashlists/{poolID}.bplist";
 
-					var playlists = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetAllPlaylists(true).ToList();
+					var playlists = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetAllPlaylists(true).ToArray();
 					foreach (var playlist in playlists)
 					{
 						if (playlist.TryGetCustomData("syncURL", out var url) && url is string urlString)
@@ -131,7 +131,7 @@ namespace Hitbloq.Other
 					}
 
 					return null;
-				}, token).ConfigureAwait(false);
+				}, token)).PlaylistLevelPack;
 			}
 			catch (TaskCanceledException)
 			{
@@ -139,7 +139,7 @@ namespace Hitbloq.Other
 			}
 		}
 
-		public async Task<IBeatmapLevelPack?> DownloadPlaylistFromPoolID(string poolID, CancellationToken token = default)
+		public async Task<BeatmapLevelPack?> DownloadPlaylistFromPoolID(string poolID, CancellationToken token = default)
 		{
 			try
 			{
@@ -154,7 +154,7 @@ namespace Hitbloq.Other
 					playlistManager.StorePlaylist(newPlaylist);
 				}
 
-				return newPlaylist;
+				return newPlaylist?.PlaylistLevelPack;
 			}
 			catch (TaskCanceledException)
 			{
@@ -162,7 +162,7 @@ namespace Hitbloq.Other
 			}
 		}
 
-		public void OpenPlaylist(IBeatmapLevelPack playlist)
+		public void OpenPlaylist(BeatmapLevelPack playlist)
 		{
 			if (_mainFlowCoordinator.YoungestChildFlowCoordinatorOrSelf() is LevelSelectionFlowCoordinator)
 			{
